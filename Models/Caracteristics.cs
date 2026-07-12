@@ -6,5 +6,6 @@
         public string Name { get; set; }
         public string Value { get; set; }
         public string MaterialId { get; set; }
+        public Material Material { get; set; } = null!;
     }
 }

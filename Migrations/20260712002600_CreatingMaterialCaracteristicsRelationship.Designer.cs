@@ -2,6 +2,7 @@
 using ForgeCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ForgeCore.Migrations
 {
     [DbContext(typeof(AplicationDbContext))]
-    partial class AplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260712002600_CreatingMaterialCaracteristicsRelationship")]
+    partial class CreatingMaterialCaracteristicsRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,13 +68,11 @@ namespace ForgeCore.Migrations
 
             modelBuilder.Entity("ForgeCore.Models.MaterialUnidadeMedida", b =>
                 {
-                    b.Property<string>("MaterialId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UnidadeMedidaId")
-                        .HasColumnType("text");
-
                     b.Property<string>("Denominator")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MaterialId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -79,9 +80,9 @@ namespace ForgeCore.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("MaterialId", "UnidadeMedidaId");
-
-                    b.HasIndex("UnidadeMedidaId");
+                    b.Property<string>("UnidadeMedida")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.ToTable("MaterialsUnidadesMedida");
                 });
@@ -111,30 +112,9 @@ namespace ForgeCore.Migrations
                     b.Navigation("Material");
                 });
 
-            modelBuilder.Entity("ForgeCore.Models.MaterialUnidadeMedida", b =>
-                {
-                    b.HasOne("ForgeCore.Models.Material", "Material")
-                        .WithMany("MaterialUnidades")
-                        .HasForeignKey("MaterialId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ForgeCore.Models.UnidadeMedida", "UnidadeMedida")
-                        .WithMany()
-                        .HasForeignKey("UnidadeMedidaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Material");
-
-                    b.Navigation("UnidadeMedida");
-                });
-
             modelBuilder.Entity("ForgeCore.Models.Material", b =>
                 {
                     b.Navigation("Caracteristics");
-
-                    b.Navigation("MaterialUnidades");
                 });
 #pragma warning restore 612, 618
         }
