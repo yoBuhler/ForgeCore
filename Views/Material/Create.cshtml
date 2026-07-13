@@ -1,42 +1,116 @@
-@model ForgeCore.Models.Material
+@model ForgeCore.ViewModels.MaterialCreateViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Criar Material";
 }
 
-<h1>Create</h1>
-
-<h4>Material</h4>
+<h4>Criar Material</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+            <ul class="nav nav-tabs d-none d-lg-flex" id="tabNav" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="header-tab" data-bs-toggle="tab" data-bs-target="#header-tab-pane" type="button" role="tab" aria-controls="header-tab-pane" aria-selected="true">Cabeçalho</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="caracteristics-tab" data-bs-toggle="tab" data-bs-target="#caracteristics-tab-pane" type="button" role="tab" aria-controls="caracteristics-tab-pane" aria-selected="false">Características</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="measurement-unit-tab" data-bs-toggle="tab" data-bs-target="#measurement-unit-tab-pane" type="button" role="tab" aria-controls="measurement-unit-tab-pane" aria-selected="false">Conversão de Unidades de Medida</button>
+                </li>
+            </ul>
+
+            <div class="tab-content accordion" id="tabContent">
+                <div class="tab-pane fade show active accordion-item" id="header-tab-pane" role="tabpanel" aria-labelledby="header-tab" tabindex="0">
+
+                    <h2 class="accordion-header d-lg-none" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            Cabeçalho
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show  d-lg-block" aria-labelledby="headingOne" data-bs-parent="#tabContent">
+                        <div class="accordion-body">
+                            <div class="form-group">
+                                <label asp-for="Id" class="control-label"></label>
+                                <input asp-for="Id" class="form-control" />
+                                <span asp-validation-for="Id" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Name" class="control-label"></label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="UnidadeBaseId" class="control-label">Unidade de Medida</label>
+                                <select asp-for="UnidadeBaseId"
+                                        asp-items="Model.UnidadeBaseOptions"
+                                        class="form-control">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="tab-pane fade accordion-item" id="caracteristics-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                    <h2 class="accordion-header d-lg-none" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Características
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse d-lg-block" aria-labelledby="headingTwo" data-bs-parent="#tabContent">
+                        <div class="accordion-body">
+                            <table class="table" id="caracteristicsTable">
+                                <thead>
+                                    <tr>
+                                        <th>@Html.DisplayNameFor(model => model.Caracteristics.First().Name)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Caracteristics.First().Value)</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="caracteristicsContainer">
+                                    @for (int i = 0; i < Model.Caracteristics.Count; i++)
+                                    {
+                                        <tr class="caracteristics-row">
+                                            <input class="index" type="hidden" name="Caracteristics.Index" value="@i" />
+                                            <input type="hidden" asp-for="Caracteristics[i].Id" />
+                                            <td>
+                                                <input asp-for="Caracteristics[i].Name" class="form-control" />
+                                            </td>
+                                            <td>
+                                                <input asp-for="Caracteristics[i].Value" class="form-control" />
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger remove-row">Delete</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <button type="button" id="btnAddCaracteristics" class="btn btn-success mb-3">Add Caracteristics Row</button>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade accordion-item" id="measurement-unit-tab-pane" role="tabpanel" aria-labelledby="measurement-unit-tab" tabindex="0">
+                    <h2 class="accordion-header d-lg-none" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            Conversão de Unidades de Medida
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse d-lg-block" aria-labelledby="headingThree" data-bs-parent="#tabContent">
+                        <div class="accordion-body">
+                            #TODO
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="UnidadeBaseId" class="control-label"></label>
-                <input asp-for="UnidadeBaseId" class="form-control" />
-                <span asp-validation-for="UnidadeBaseId" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Caracteristics" class="control-label"></label>
-                <input asp-for="Caracteristics" class="form-control" />
-                <span asp-validation-for="Caracteristics" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="MaterialUnidades" class="control-label"></label>
-                <input asp-for="MaterialUnidades" class="form-control" />
-                <span asp-validation-for="MaterialUnidades" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            <div class="form-group mt-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
@@ -46,3 +120,7 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+
+@section Scripts {
+    <script src="~/js/material.js"></script>
+}

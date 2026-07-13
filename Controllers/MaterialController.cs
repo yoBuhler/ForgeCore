@@ -1,8 +1,11 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using ForgeCore.Models;
 using ForgeCore.Data;
+using ForgeCore.ViewModels;
+using ForgeCore.Migrations;
 
 public class MaterialController : Controller
 {
@@ -40,7 +43,16 @@ public class MaterialController : Controller
     // GET: MATERIALS/Create
     public IActionResult Create()
     {
-        return View();
+        var model = new MaterialCreateViewModel
+        {
+            UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
+            {
+                Value = um.Id,
+                Text = um.Nome
+            }).ToList()
+        };
+        model.Caracteristics.Add(new Caracteristics());
+        return View(model);
     }
 
     // POST: MATERIALS/Create
@@ -48,14 +60,30 @@ public class MaterialController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Id,Name,UnidadeBaseId,Caracteristics,MaterialUnidades")] Material material)
+    public async Task<IActionResult> Create(MaterialCreateViewModel material)
     {
         if (ModelState.IsValid)
         {
-            _context.Add(material);
+            material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
+
+            var newMaterial = new Material
+            {
+                Id = material.Id,
+                Name = material.Name,
+                UnidadeBaseId = material.UnidadeBaseId,
+                Caracteristics = material.Caracteristics
+            };
+            _context.Add(newMaterial);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        material.UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
+        {
+            Value = um.Id,
+            Text = um.Nome
+        }).ToList();
+
         return View(material);
     }
 
@@ -67,12 +95,32 @@ public class MaterialController : Controller
             return NotFound();
         }
 
-        var material = await _context.Materials.FindAsync(id);
+        var material = await _context.Materials
+            .Include(c => c.Caracteristics)
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (material == null)
         {
             return NotFound();
         }
-        return View(material);
+
+        if (material.Caracteristics.Count() == 0)
+        {
+            material.Caracteristics.Add(new Caracteristics());
+        }
+
+        var model = new MaterialCreateViewModel
+        {
+            Id = material.Id,
+            Name = material.Name,
+            UnidadeBaseId = material.UnidadeBaseId,
+            Caracteristics = material.Caracteristics,
+            UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
+            {
+                Value = um.Id,
+                Text = um.Nome
+            }).ToList()
+        };
+        return View(model);
     }
 
     // POST: MATERIALS/Edit/5
@@ -80,7 +128,7 @@ public class MaterialController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(string? id, [Bind("Id,Name,UnidadeBaseId,Caracteristics,MaterialUnidades")] Material material)
+    public async Task<IActionResult> Edit(string? id, MaterialCreateViewModel material)
     {
         if (id != material.Id)
         {
@@ -91,6 +139,15 @@ public class MaterialController : Controller
         {
             try
             {
+                material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
+
+                var newMaterial = new Material
+                {
+                    Id = material.Id,
+                    Name = material.Name,
+                    UnidadeBaseId = material.UnidadeBaseId,
+                    Caracteristics = material.Caracteristics
+                };
                 _context.Update(material);
                 await _context.SaveChangesAsync();
             }
@@ -107,6 +164,13 @@ public class MaterialController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+
+        material.UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
+        {
+            Value = um.Id,
+            Text = um.Nome
+        }).ToList();
+
         return View(material);
     }
 
