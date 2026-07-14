@@ -48,7 +48,11 @@ public class MaterialController : Controller
             UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
             {
                 Value = um.Id,
-                Text = um.Nome
+                Text = $"{um.Id} - {um.Nome}"
+            }).ToList(),
+            MaterialUnidadeMedida = _context.UnidadesMedida.Select(um => new MaterialUnidadeMedida
+            {
+                UnidadeMedidaId = um.Id,
             }).ToList()
         };
         model.Caracteristics.Add(new Caracteristics());
@@ -65,13 +69,15 @@ public class MaterialController : Controller
         if (ModelState.IsValid)
         {
             material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
+            material.MaterialUnidadeMedida.RemoveAll(mum => string.IsNullOrWhiteSpace(mum.Numerator) || string.IsNullOrWhiteSpace(mum.Denominator));
 
             var newMaterial = new Material
             {
                 Id = material.Id,
                 Name = material.Name,
                 UnidadeBaseId = material.UnidadeBaseId,
-                Caracteristics = material.Caracteristics
+                Caracteristics = material.Caracteristics,
+                MaterialUnidades = material.MaterialUnidadeMedida
             };
             _context.Add(newMaterial);
             await _context.SaveChangesAsync();
@@ -81,7 +87,7 @@ public class MaterialController : Controller
         material.UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
         {
             Value = um.Id,
-            Text = um.Nome
+            Text = $"{um.Id} - {um.Nome}"
         }).ToList();
 
         return View(material);
@@ -97,6 +103,7 @@ public class MaterialController : Controller
 
         var material = await _context.Materials
             .Include(c => c.Caracteristics)
+            .Include(mum => mum.MaterialUnidades)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (material == null)
         {
@@ -107,6 +114,21 @@ public class MaterialController : Controller
         {
             material.Caracteristics.Add(new Caracteristics());
         }
+        List<UnidadeMedida> unidadeMedidas = _context.UnidadesMedida.ToList();
+
+        foreach (UnidadeMedida unidadeMedida in unidadeMedidas)
+        {
+            if (!material.MaterialUnidades.Exists(mum => mum.UnidadeMedidaId == unidadeMedida.Id))
+            {
+                material.MaterialUnidades.Add(new MaterialUnidadeMedida
+                {
+                    MaterialId = id,
+                    UnidadeMedidaId = unidadeMedida.Id,
+                    Numerator = (unidadeMedida.Id == material.UnidadeBaseId) ? "1" : "",
+                    Denominator = (unidadeMedida.Id == material.UnidadeBaseId) ? "1" : ""
+                });
+            }
+        }
 
         var model = new MaterialCreateViewModel
         {
@@ -114,10 +136,11 @@ public class MaterialController : Controller
             Name = material.Name,
             UnidadeBaseId = material.UnidadeBaseId,
             Caracteristics = material.Caracteristics,
+            MaterialUnidadeMedida = material.MaterialUnidades,
             UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
             {
                 Value = um.Id,
-                Text = um.Nome
+                Text = $"{um.Id} - {um.Nome}"
             }).ToList()
         };
         return View(model);
@@ -140,13 +163,15 @@ public class MaterialController : Controller
             try
             {
                 material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
+                material.MaterialUnidadeMedida.RemoveAll(mum => string.IsNullOrWhiteSpace(mum.Numerator) || string.IsNullOrWhiteSpace(mum.Denominator));
 
                 var newMaterial = new Material
                 {
                     Id = material.Id,
                     Name = material.Name,
                     UnidadeBaseId = material.UnidadeBaseId,
-                    Caracteristics = material.Caracteristics
+                    Caracteristics = material.Caracteristics,
+                    MaterialUnidades = material.MaterialUnidadeMedida
                 };
                 _context.Update(material);
                 await _context.SaveChangesAsync();
@@ -168,7 +193,7 @@ public class MaterialController : Controller
         material.UnidadeBaseOptions = _context.UnidadesMedida.Select(um => new SelectListItem
         {
             Value = um.Id,
-            Text = um.Nome
+            Text = $"{um.Id} - {um.Nome}"
         }).ToList();
 
         return View(material);

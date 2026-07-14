@@ -12,6 +12,8 @@ namespace ForgeCore.ViewModels
         [ValidateNever]
         public List<Caracteristics> Caracteristics { get; set; } = new List<Caracteristics>();
         [ValidateNever]
+        public List<MaterialUnidadeMedida> MaterialUnidadeMedida { get; set; } = new List<MaterialUnidadeMedida>();
+        [ValidateNever]
         public IEnumerable<SelectListItem> UnidadeBaseOptions { get; set; }
     }
 }

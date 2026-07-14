@@ -1,5 +1,6 @@
 ﻿document.addEventListener("DOMContentLoaded", function () {
-    const container = document.getElementById("caracteristicsContainer");
+    // caracteristics logic
+    const caracteristicsContainer = document.getElementById("caracteristicsContainer");
     const addButton = document.getElementById("btnAddCaracteristics");
 
     // Add Row Click Event
@@ -26,12 +27,12 @@
                 `;
 
         // Insert the new row into the table body
-        container.insertAdjacentHTML('beforeend', rowHtml);
+        caracteristicsContainer.insertAdjacentHTML('beforeend', rowHtml);
         toggleDeleteButtons();
     });
 
     // Delete Row Click Event (Event Delegation)
-    container.addEventListener("click", function (e) {
+    caracteristicsContainer.addEventListener("click", function (e) {
         if (e.target && e.target.classList.contains("remove-row")) {
             const row = e.target.closest("tr");
             row.remove();
@@ -41,8 +42,8 @@
 
     // Prevent deleting the last row to keep form data valid
     function toggleDeleteButtons() {
-        const rows = container.querySelectorAll(".caracteristics-row");
-        const deleteButtons = container.querySelectorAll(".remove-row");
+        const rows = caracteristicsContainer.querySelectorAll(".caracteristics-row");
+        const deleteButtons = caracteristicsContainer.querySelectorAll(".remove-row");
 
         if (rows.length === 1) {
             deleteButtons[0].setAttribute("disabled", "true");
@@ -52,4 +53,37 @@
     }
 
     toggleDeleteButtons();
+
+    // unit of measurement logic
+    const materialMeasurementUnitContainer = document.getElementById("materialMeasurementUnitContainer");
+    const materialId = document.querySelector('.material-id');
+    const measurementunitId = document.querySelector('.measurementunit-id');
+
+    function initialValuesInMaterial() {
+        materialMeasurementUnitContainer.querySelectorAll('.materialMeasurementUnit-row').forEach(function (element) {
+            let materialIdOfRow = element.querySelector('.materialMeasurementUnit-material-id');
+            materialIdOfRow.value = materialId.value;
+        });
+    }
+    function initialValuesInMeasurementUnit() {
+        materialMeasurementUnitContainer.querySelectorAll('.materialMeasurementUnit-row').forEach(function (element) {
+            let measurementunitIdOfRow = element.querySelector('.materialMeasurementUnit-measurementunit-id');
+            if (measurementunitIdOfRow.value === measurementunitId.value) {
+                element.querySelector('.materialMeasurementUnit-measurementunit-numerator').value = 1;
+                element.querySelector('.materialMeasurementUnit-measurementunit-denominator').value = 1;
+            } else {
+                element.querySelector('.materialMeasurementUnit-measurementunit-numerator').value = '';
+                element.querySelector('.materialMeasurementUnit-measurementunit-denominator').value = '';
+            }
+            element.querySelector('.materialMeasurementUnit-measurementunit-measurementunit-id-base').value = measurementunitId.value;
+        });
+    }
+
+    materialId.addEventListener('change', initialValuesInMaterial);
+    measurementunitId.addEventListener('change', initialValuesInMeasurementUnit);
+
+    // for creation forms
+    if (!materialId.value) {
+        initialValuesInMeasurementUnit();
+    }
 });
