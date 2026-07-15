@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using ForgeCore.Data;
+using ForgeCore.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,9 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<AplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IMaterialService, MaterialService>();
+builder.Services.AddScoped<IConversorService, ConversorService>();
 
 var app = builder.Build();
 

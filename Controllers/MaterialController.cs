@@ -31,13 +31,41 @@ public class MaterialController : Controller
         }
 
         var material = await _context.Materials
+            .Include(c => c.Caracteristics)
+            .Include(mum => mum.MaterialUnidades)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (material == null)
         {
             return NotFound();
         }
 
-        return View(material);
+        List<UnidadeMedida> unidadeMedidas = _context.UnidadesMedida.ToList();
+
+        foreach (UnidadeMedida unidadeMedida in unidadeMedidas)
+        {
+            if (!material.MaterialUnidades.Exists(mum => mum.UnidadeMedidaId == unidadeMedida.Id))
+            {
+                MaterialUnidadeMedida materialUnidadeMedida = new MaterialUnidadeMedida();
+                materialUnidadeMedida.MaterialId = id;
+                materialUnidadeMedida.UnidadeMedidaId = unidadeMedida.Id;
+                if (unidadeMedida.Id == material.UnidadeBaseId)
+                {
+                    materialUnidadeMedida.Numerator = 1;
+                    materialUnidadeMedida.Denominator = 1;
+                }
+                material.MaterialUnidades.Add(materialUnidadeMedida);
+            }
+        }
+
+        var model = new MaterialCreateViewModel
+        {
+            Id = material.Id,
+            Name = material.Name,
+            UnidadeBaseId = material.UnidadeBaseId,
+            Caracteristics = material.Caracteristics,
+            MaterialUnidadeMedida = material.MaterialUnidades
+        };
+        return View(model);
     }
 
     // GET: MATERIALS/Create
@@ -69,7 +97,7 @@ public class MaterialController : Controller
         if (ModelState.IsValid)
         {
             material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
-            material.MaterialUnidadeMedida.RemoveAll(mum => string.IsNullOrWhiteSpace(mum.Numerator) || string.IsNullOrWhiteSpace(mum.Denominator));
+            material.MaterialUnidadeMedida.RemoveAll(mum => mum.Numerator <= 0 || mum.Denominator <= 0);
 
             var newMaterial = new Material
             {
@@ -120,13 +148,15 @@ public class MaterialController : Controller
         {
             if (!material.MaterialUnidades.Exists(mum => mum.UnidadeMedidaId == unidadeMedida.Id))
             {
-                material.MaterialUnidades.Add(new MaterialUnidadeMedida
+                MaterialUnidadeMedida materialUnidadeMedida = new MaterialUnidadeMedida();
+                materialUnidadeMedida.MaterialId = id;
+                materialUnidadeMedida.UnidadeMedidaId = unidadeMedida.Id;
+                if (unidadeMedida.Id == material.UnidadeBaseId)
                 {
-                    MaterialId = id,
-                    UnidadeMedidaId = unidadeMedida.Id,
-                    Numerator = (unidadeMedida.Id == material.UnidadeBaseId) ? "1" : "",
-                    Denominator = (unidadeMedida.Id == material.UnidadeBaseId) ? "1" : ""
-                });
+                    materialUnidadeMedida.Numerator = 1;
+                    materialUnidadeMedida.Denominator = 1;
+                }
+                material.MaterialUnidades.Add(materialUnidadeMedida);
             }
         }
 
@@ -160,20 +190,66 @@ public class MaterialController : Controller
 
         if (ModelState.IsValid)
         {
+            var existingMaterial = await _context.Materials
+                .Include(m => m.Caracteristics)
+                .Include(m => m.MaterialUnidades)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (existingMaterial == null)
+            {
+                return NotFound();
+            }
+
             try
             {
                 material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
-                material.MaterialUnidadeMedida.RemoveAll(mum => string.IsNullOrWhiteSpace(mum.Numerator) || string.IsNullOrWhiteSpace(mum.Denominator));
+                material.MaterialUnidadeMedida.RemoveAll(mum => mum.Numerator <= 0 || mum.Denominator <= 0);
 
-                var newMaterial = new Material
+                existingMaterial.Name = material.Name;
+                existingMaterial.UnidadeBaseId = material.UnidadeBaseId;
+
+                var incomingCaracIds = material.Caracteristics.Select(c => c.Id).ToList();
+                existingMaterial.Caracteristics.RemoveAll(c => !incomingCaracIds.Contains(c.Id));
+
+                // Atualiza as existentes ou adiciona as novas
+                foreach (var incomingCarac in material.Caracteristics)
                 {
-                    Id = material.Id,
-                    Name = material.Name,
-                    UnidadeBaseId = material.UnidadeBaseId,
-                    Caracteristics = material.Caracteristics,
-                    MaterialUnidades = material.MaterialUnidadeMedida
-                };
-                _context.Update(material);
+                    var existingCarac = existingMaterial.Caracteristics
+                        .FirstOrDefault(c => c.Id == incomingCarac.Id && c.Id != default);
+
+                    if (existingCarac != null)
+                    {
+                        // Atualiza os valores da característica que já existia
+                        existingCarac.Name = incomingCarac.Name;
+                        existingCarac.Value = incomingCarac.Value;
+                    }
+                    else
+                    {
+                        // Adiciona como nova característica
+                        existingMaterial.Caracteristics.Add(incomingCarac);
+                    }
+                }
+
+                var incomingUnidadeIds = material.MaterialUnidadeMedida.Select(u => u.UnidadeMedidaId).ToList();
+                existingMaterial.MaterialUnidades.RemoveAll(u => !incomingUnidadeIds.Contains(u.UnidadeMedidaId));
+
+                // Atualiza as existentes ou adiciona as novas
+                foreach (var incomingUnidade in material.MaterialUnidadeMedida)
+                {
+                    var existingUnidade = existingMaterial.MaterialUnidades
+                        .FirstOrDefault(u => u.UnidadeMedidaId == incomingUnidade.UnidadeMedidaId);
+
+                    if (existingUnidade != null)
+                    {
+                        existingUnidade.Numerator = incomingUnidade.Numerator;
+                        existingUnidade.Denominator = incomingUnidade.Denominator;
+                    }
+                    else
+                    {
+                        existingMaterial.MaterialUnidades.Add(incomingUnidade);
+                    }
+                }
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
