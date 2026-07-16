@@ -10,12 +10,10 @@ namespace ForgeCore.Models
         [Required]
         [Display(Name = "UM")]
         public string UnidadeMedidaId {  get; set; }
-        [Required]
         [Display(Name = "Numerador")]
-        public int Numerator { get; set; }
-        [Required]
+        public int? Numerator { get; set; }
         [Display(Name = "Denominador")]
-        public int Denominator { get; set; }
+        public int? Denominator { get; set; }
         public Material Material { get; set; } = null!;
         public UnidadeMedida UnidadeMedida { get; set; } = null!;
     }

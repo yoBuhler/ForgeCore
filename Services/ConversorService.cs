@@ -67,14 +67,14 @@ namespace ForgeCore.Services
             if (request.UnitFromId != material.UnidadeBaseId)
             {
                 var conversion = conversions.Find(mum => mum.UnidadeMedidaId == request.UnitFromId);
-                response.ConvertedValue = response.ConvertedValue * conversion.Denominator / conversion.Numerator;
+                response.ConvertedValue = (decimal)(response.ConvertedValue * conversion.Denominator / conversion.Numerator);
             }
 
             // Converte quantidade de unidade de medida PARA para unidade de medida base
             if (request.UnitToId != material.UnidadeBaseId)
             {
                 var conversion = conversions.Find(mum => mum.UnidadeMedidaId == request.UnitToId);
-                response.ConvertedValue = response.ConvertedValue * conversion.Numerator / conversion.Denominator;
+                response.ConvertedValue = (decimal)(response.ConvertedValue * conversion.Numerator / conversion.Denominator);
             }
 
             return response;

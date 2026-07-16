@@ -97,7 +97,7 @@ public class MaterialController : Controller
         if (ModelState.IsValid)
         {
             material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
-            material.MaterialUnidadeMedida.RemoveAll(mum => mum.Numerator <= 0 || mum.Denominator <= 0);
+            material.MaterialUnidadeMedida.RemoveAll(mum => (mum.Numerator == null || mum.Numerator <= 0) || (mum.Denominator == null || mum.Denominator <= 0));
 
             var newMaterial = new Material
             {
@@ -203,7 +203,7 @@ public class MaterialController : Controller
             try
             {
                 material.Caracteristics.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Value));
-                material.MaterialUnidadeMedida.RemoveAll(mum => mum.Numerator <= 0 || mum.Denominator <= 0);
+                material.MaterialUnidadeMedida.RemoveAll(mum => (mum.Numerator == null || mum.Numerator <= 0) || (mum.Denominator == null || mum.Denominator <= 0));
 
                 existingMaterial.Name = material.Name;
                 existingMaterial.UnidadeBaseId = material.UnidadeBaseId;
